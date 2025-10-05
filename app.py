@@ -10,8 +10,12 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.svm import SVC
 import pandas as pd
-import lime
-import lime.lime_text
+LIME_AVAILABLE = True
+try:
+    import lime
+    import lime.lime_text
+except Exception:
+    LIME_AVAILABLE = False
 import streamlit.components.v1 as components
 
 # Load the TF-IDF vectorizer
@@ -117,19 +121,24 @@ if st.session_state.last_prediction:
     st.write(f"**Prediction:** {prediction}")
     st.write(f"**Confidence:** {confidence:.2%}")
     
-    # LIME Explanation
-    explainer = lime.lime_text.LimeTextExplainer(class_names=['Safe', 'Spam'])
-    
-    # Create a prediction function for LIME
-    def lime_predict(texts):
-        processed_texts = [preprocess_text(text) for text in texts]
-        vectorized_texts = tfidf.transform(processed_texts).toarray()
-        return model.predict_proba(vectorized_texts)
+    # LIME Explanation (if available)
+    if LIME_AVAILABLE:
+        try:
+            explainer = lime.lime_text.LimeTextExplainer(class_names=['Safe', 'Spam'])
 
-    explanation = explainer.explain_instance(message, lime_predict, num_features=10)
-    
-    st.subheader("Explanation")
-    components.html(explanation.as_html(), height=800)
+            # Create a prediction function for LIME
+            def lime_predict(texts):
+                processed_texts = [preprocess_text(text) for text in texts]
+                vectorized_texts = tfidf.transform(processed_texts).toarray()
+                return model.predict_proba(vectorized_texts)
+
+            explanation = explainer.explain_instance(message, lime_predict, num_features=10)
+            st.subheader("Explanation")
+            components.html(explanation.as_html(), height=800)
+        except Exception as e:
+            st.warning(f"LIME explanation failed: {e}")
+    else:
+        st.info("LIME is not available in this environment — explanation is disabled.")
     
     if prediction == 'Spam':
         if confidence > 0.9:
