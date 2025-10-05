@@ -1,6 +1,8 @@
 nltk
 requests
 pandas
-scikit-learn
+scikit-learn==1.2.2
 matplotlib
 seaborn
+streamlit
+lime
