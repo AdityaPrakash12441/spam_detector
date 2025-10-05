@@ -1,0 +1,6 @@
+nltk
+requests
+pandas
+scikit-learn
+matplotlib
+seaborn
